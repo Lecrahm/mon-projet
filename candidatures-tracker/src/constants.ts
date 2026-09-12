@@ -1,9 +1,10 @@
 import type { Status } from "./types";
 import { STATUSES } from "./types";
 
-export const STORAGE_KEY = "candidatures-tracker:marcel-esmel:v1";
+export const STORAGE_KEY = "candidatures-tracker:marcel-esmel:v2";
 export const OWNER = "Marcel ESMEL";
-export const APP_NAME = "Candidatures";
+export const APP_NAME = "Hub";
+export const TAGLINE = "Shortlist personnelle · Hospitality & accueil · Paris";
 
 export const STATUS_META: Record<
   Status,

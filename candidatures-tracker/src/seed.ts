@@ -1,17 +1,38 @@
+import { DOCUMENTS } from "./documents";
 import type { Job } from "./types";
 
 const FOUND = "2026-09-12";
+const BLOCKED_REASON = "Permis de conduire requis — Marcel n'a pas le permis B";
 
 function row(
-  partial: Omit<Job, "status" | "notes" | "date_found" | "date_applied" | "next_followup">,
+  partial: Omit<
+    Job,
+    | "status"
+    | "notes"
+    | "date_found"
+    | "date_applied"
+    | "next_followup"
+    | "letter"
+    | "cv"
+    | "blocked"
+    | "blocked_reason"
+  > & { blocked?: boolean; notes?: string },
 ): Job {
+  const docs = DOCUMENTS[partial.id] ?? { letter: "", cv: "" };
+  const blocked = Boolean(partial.blocked);
   return {
     ...partial,
     status: "à_traiter",
-    notes: "",
+    notes:
+      partial.notes ??
+      (blocked ? "Ne pas candidater : permis B exigé. Dossier conservé pour mémoire." : ""),
     date_found: FOUND,
     date_applied: "",
     next_followup: "",
+    letter: docs.letter,
+    cv: docs.cv,
+    blocked,
+    blocked_reason: blocked ? BLOCKED_REASON : "",
   };
 }
 
@@ -37,6 +58,7 @@ export const SEED_JOBS: Job[] = [
     url: "https://www.welcometothejungle.com/fr/companies/cercle-de-l-union-interalliee/jobs/hote-hotesse-d-accueil_paris_CDLI_aqp5MKJ",
     fit_score: 9,
     tags: ["accueil", "luxe", "paris-8"],
+    blocked: true,
   }),
   row({
     id: "seed-03",
@@ -48,6 +70,7 @@ export const SEED_JOBS: Job[] = [
     url: "https://www.welcometothejungle.com/fr/companies/cercle-de-l-union-interalliee/jobs/hote-hotesse-d-accueil-a-l-ensemble-sportif_paris",
     fit_score: 8.5,
     tags: ["accueil", "sport", "paris-8"],
+    blocked: true,
   }),
   row({
     id: "seed-04",

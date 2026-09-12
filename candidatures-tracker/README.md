@@ -1,8 +1,8 @@
-# Candidatures Tracker — Marcel ESMEL
+# Hub — Marcel ESMEL
 
-Tableau de bord glassmorphism (Vite + React + TypeScript) pour suivre une shortlist d’offres d’accueil / hospitality à Paris.
+Hub personnel local (Vite + React + TypeScript) pour la shortlist hospitality / accueil. Pas un admin Kanban : une grille de dossiers, chacun avec **offre, lettre, CV adapté et notes**.
 
-Les données vivent **uniquement dans le navigateur** (`localStorage`) et peuvent être exportées / réimportées en JSON.
+Les données restent **dans le navigateur** (`localStorage`). Vercel est optionnel.
 
 ## Lancer en local
 
@@ -12,61 +12,18 @@ npm install
 npm run dev
 ```
 
-Puis ouvrir l’URL affichée par Vite (généralement `http://localhost:5173`).
-
-## Vercel
-
-**Root Directory** du projet Vercel : `candidatures-tracker`  
-(Settings → Build and Deployment → Root Directory)
-
-Le preview Vercel sert alors le tracker à `/` (`https://<deployment>.vercel.app/`), pas l’app N-CARD à la racine du repo.
-
-Ce dossier contient son propre `vercel.json` (preset Vite, `npm run build`, sortie `dist`).
-
-Si le Root Directory n’est pas encore changé, le `vercel.json` à la racine du dépôt force déjà le build vers ce dossier.
-
-## Build de production
+Ouvrir **http://localhost:5173**.
 
 ```bash
-cd candidatures-tracker
-npm install
 npm run build
-npm run preview
 ```
 
-## Fonctionnalités
+## Ce que contient chaque dossier
 
-- Compteurs par statut (à traiter, adapté, candidaté, relancé, entretien, offre, refusé, archivé)
-- Kanban en cartes verre dépoli (glisser-déposer d’une colonne à l’autre)
-- Ajout / édition / suppression via une modale
-- Recherche + filtres (statut, contrat, score min.)
-- Persistance `localStorage`
-- Import / export JSON
-- Shortlist réelle préchargée (12 offres, statut **À traiter**)
+Onglets du tiroir : **Offre | Lettre | CV | Notes**, avec boutons **Copier** sur la lettre et le CV.
 
-## Modèle JSON
+Les 12 offres de la shortlist sont préchargées. Les deux postes **Cercle de l’Union Interalliée** (`seed-02`, `seed-03` Ensemble sportif) sont **bloqués** (permis B requis — Marcel n’a pas le permis).
 
-Chaque offre :
+Les lettres et CV sont des versions adaptées par maison. Les fichiers sources n’étaient pas dans le repo : les blocs `TODO` (e-mail, téléphone, expériences) sont à compléter.
 
-```json
-{
-  "id": "seed-01",
-  "title": "Hospitality Officer H/F",
-  "company": "PATCHWORK",
-  "location": "Paris QCA",
-  "contract": "CDI",
-  "salary": "24 715 – 28 546 EUR",
-  "url": "https://…",
-  "status": "à_traiter",
-  "fit_score": 9.5,
-  "notes": "",
-  "date_found": "2026-09-12",
-  "date_applied": "",
-  "next_followup": "",
-  "tags": ["hospitality", "paris"]
-}
-```
-
-Statuts possibles : `à_traiter` | `adapté` | `candidaté` | `relancé` | `entretien` | `offre` | `refusé` | `archivé`.
-
-Arrière-plan photographique : cliché Unsplash d’un bureau sombre (clavier / écran), assombri et grainé pour l’effet verre dépoli.
+Vue principale : **grille** (ou liste). Le Kanban reste une vue secondaire.

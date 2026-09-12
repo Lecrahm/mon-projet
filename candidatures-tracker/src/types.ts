@@ -10,6 +10,9 @@ export const STATUSES = [
 ] as const;
 
 export type Status = (typeof STATUSES)[number];
+export type ViewMode = "grid" | "list" | "kanban";
+export type DrawerTab = "offre" | "lettre" | "cv" | "notes";
+export type BlockedFilter = "all" | "active" | "blocked";
 
 export interface Job {
   id: string;
@@ -26,6 +29,10 @@ export interface Job {
   date_applied: string;
   next_followup: string;
   tags: string[];
+  letter: string;
+  cv: string;
+  blocked: boolean;
+  blocked_reason: string;
 }
 
 export interface JobFilters {
@@ -33,4 +40,5 @@ export interface JobFilters {
   status: Status | "all";
   contract: string;
   minFit: number;
+  blocked: BlockedFilter;
 }

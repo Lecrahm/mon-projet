@@ -4,7 +4,7 @@ Two apps live in this repository:
 
 | App | Folder | What it is |
 | --- | --- | --- |
-| **Candidatures Tracker** | [`candidatures-tracker/`](./candidatures-tracker) | Glassmorphism job-application dashboard (Marcel ESMEL) |
+| **Hub candidatures** | [`candidatures-tracker/`](./candidatures-tracker) | Personal glass hub for Marcel ESMEL (grille, lettres, CV) |
 | N-CARD | repo root (`src/`, `index.html`) | Existing NFC card app — do not treat this as the Vercel preview |
 
 ## Open the candidatures tracker

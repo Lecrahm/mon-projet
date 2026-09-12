@@ -16,6 +16,10 @@ export function createEmptyJob(): Job {
     date_applied: "",
     next_followup: "",
     tags: [],
+    letter: "",
+    cv: "",
+    blocked: false,
+    blocked_reason: "",
   };
 }
 
@@ -44,6 +48,8 @@ export function matchesFilters(job: Job, filters: JobFilters): boolean {
   if (filters.status !== "all" && job.status !== filters.status) return false;
   if (filters.contract !== "all" && job.contract !== filters.contract) return false;
   if (job.fit_score < filters.minFit) return false;
+  if (filters.blocked === "active" && job.blocked) return false;
+  if (filters.blocked === "blocked" && !job.blocked) return false;
 
   const q = filters.query.trim().toLowerCase();
   if (!q) return true;
@@ -55,6 +61,8 @@ export function matchesFilters(job: Job, filters: JobFilters): boolean {
     job.contract,
     job.salary,
     job.notes,
+    job.letter,
+    job.cv,
     job.tags.join(" "),
   ]
     .join(" ")
@@ -87,4 +95,13 @@ export function parseTags(value: string): string[] {
     .split(",")
     .map((tag) => tag.trim())
     .filter(Boolean);
+}
+
+export async function copyText(value: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(value);
+    return true;
+  } catch {
+    return false;
+  }
 }

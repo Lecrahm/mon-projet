@@ -1,4 +1,5 @@
 import { STORAGE_KEY } from "./constants";
+import { DOCUMENTS } from "./documents";
 import { SEED_JOBS } from "./seed";
 import { STATUSES, type Job, type Status } from "./types";
 
@@ -26,9 +27,12 @@ export function normalizeJob(raw: unknown): Job | null {
     : [];
 
   const fit = Math.min(10, Math.max(1, asNumber(item.fit_score, 5)));
+  const id = asString(item.id) || crypto.randomUUID();
+  const seed = SEED_JOBS.find((job) => job.id === id);
+  const docs = DOCUMENTS[id];
 
   return {
-    id: asString(item.id) || crypto.randomUUID(),
+    id,
     title,
     company,
     location: asString(item.location),
@@ -37,11 +41,15 @@ export function normalizeJob(raw: unknown): Job | null {
     url: asString(item.url),
     status: isStatus(item.status) ? item.status : "à_traiter",
     fit_score: Math.round(fit * 2) / 2,
-    notes: asString(item.notes),
+    notes: asString(item.notes, seed?.notes ?? ""),
     date_found: asString(item.date_found),
     date_applied: asString(item.date_applied),
     next_followup: asString(item.next_followup),
     tags,
+    letter: asString(item.letter) || docs?.letter || seed?.letter || "",
+    cv: asString(item.cv) || docs?.cv || seed?.cv || "",
+    blocked: typeof item.blocked === "boolean" ? item.blocked : Boolean(seed?.blocked),
+    blocked_reason: asString(item.blocked_reason) || seed?.blocked_reason || "",
   };
 }
 
@@ -61,7 +69,8 @@ export function loadJobs(): Job[] {
     if (raw === null) return structuredClone(SEED_JOBS);
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return structuredClone(SEED_JOBS);
-    return parsed.map(normalizeJob).filter((job): job is Job => job !== null);
+    const jobs = parsed.map(normalizeJob).filter((job): job is Job => job !== null);
+    return jobs.length > 0 ? jobs : structuredClone(SEED_JOBS);
   } catch {
     return structuredClone(SEED_JOBS);
   }

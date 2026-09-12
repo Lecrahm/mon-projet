@@ -1,27 +1,34 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ConfirmDialog } from "./components/ConfirmDialog";
+import { HubCard } from "./components/HubCard";
 import {
   IconDownload,
+  IconGrid,
+  IconKanban,
+  IconList,
   IconPlus,
   IconSearch,
   IconUpload,
   LogoMark,
 } from "./components/Icons";
+import { JobDrawer } from "./components/JobDrawer";
 import { JobModal } from "./components/JobModal";
 import { KanbanBoard } from "./components/KanbanBoard";
-import { APP_NAME, OWNER, STATUS_META, STATUS_LIST } from "./constants";
+import { APP_NAME, OWNER, TAGLINE } from "./constants";
 import { exportJobsFile, loadJobs, parseJobsJson, saveJobs } from "./storage";
-import type { Job, JobFilters, Status } from "./types";
-import { countByStatus, createEmptyJob, matchesFilters, uniqueContracts } from "./utils";
+import type { BlockedFilter, DrawerTab, Job, JobFilters, Status, ViewMode } from "./types";
+import { createEmptyJob, matchesFilters, uniqueContracts } from "./utils";
 
 export default function App() {
   const [jobs, setJobs] = useState<Job[]>(() => loadJobs());
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
   const [contractFilter, setContractFilter] = useState("all");
-  const [minFit, setMinFit] = useState(0);
-  const [editing, setEditing] = useState<Job | null>(null);
-  const [isNew, setIsNew] = useState(false);
+  const [blockedFilter, setBlockedFilter] = useState<BlockedFilter>("all");
+  const [view, setView] = useState<ViewMode>("grid");
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [tab, setTab] = useState<DrawerTab>("offre");
+  const [creating, setCreating] = useState<Job | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Job | null>(null);
   const [toast, setToast] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -33,7 +40,7 @@ export default function App() {
 
   useEffect(() => {
     if (!toast) return;
-    const timer = window.setTimeout(() => setToast(""), 2800);
+    const timer = window.setTimeout(() => setToast(""), 2600);
     return () => window.clearTimeout(timer);
   }, [toast]);
 
@@ -52,42 +59,42 @@ export default function App() {
     query,
     status: statusFilter,
     contract: contractFilter,
-    minFit,
+    minFit: 0,
+    blocked: blockedFilter,
   };
 
   const visible = useMemo(
     () => jobs.filter((job) => matchesFilters(job, filters)),
-    [jobs, query, statusFilter, contractFilter, minFit],
+    [jobs, query, statusFilter, contractFilter, blockedFilter],
   );
 
-  const counts = useMemo(() => countByStatus(jobs), [jobs]);
   const contracts = useMemo(() => uniqueContracts(jobs), [jobs]);
-  const filterActive = statusFilter !== "all" || contractFilter !== "all" || minFit > 0 || query.trim() !== "";
+  const openJob = jobs.find((job) => job.id === openId) ?? null;
+  const blockedCount = jobs.filter((job) => job.blocked).length;
+  const activeCount = jobs.length - blockedCount;
+  const avgFit = jobs.length
+    ? Math.round((jobs.reduce((sum, job) => sum + job.fit_score, 0) / jobs.length) * 10) / 10
+    : 0;
 
-  const upsert = (job: Job) => {
-    setJobs((prev) => {
-      const exists = prev.some((item) => item.id === job.id);
-      return exists ? prev.map((item) => (item.id === job.id ? job : item)) : [job, ...prev];
-    });
-    setEditing(null);
-    setToast(isNew ? "Candidature ajoutée" : "Candidature enregistrée");
+  const patchJob = (next: Job) => {
+    setJobs((prev) => prev.map((job) => (job.id === next.id ? next : job)));
   };
 
   const remove = (job: Job) => {
     setJobs((prev) => prev.filter((item) => item.id !== job.id));
     setPendingDelete(null);
-    setEditing(null);
-    setToast("Candidature supprimée");
+    if (openId === job.id) setOpenId(null);
+    setToast("Offre retirée du hub");
   };
 
-  const moveStatus = (id: string, status: Status) => {
-    setJobs((prev) => prev.map((job) => (job.id === id && job.status !== status ? { ...job, status } : job)));
+  const open = (job: Job, nextTab: DrawerTab = "offre") => {
+    setOpenId(job.id);
+    setTab(nextTab);
   };
 
   const onImport = async (file: File) => {
     try {
-      const text = await file.text();
-      const imported = parseJobsJson(text);
+      const imported = parseJobsJson(await file.text());
       setJobs(imported);
       setToast(`Import réussi · ${imported.length} offre${imported.length > 1 ? "s" : ""}`);
     } catch (error) {
@@ -101,17 +108,30 @@ export default function App() {
         <div className="bg__photo" />
         <div className="bg__dim" />
         <div className="bg__grain" />
+        <div className="bg__glow" />
       </div>
 
-      <header className="topbar">
-        <div className="brand">
-          <LogoMark size={34} />
+      <header className="hero">
+        <div className="brand brand--hero">
+          <LogoMark size={44} />
           <div>
             <p className="brand__name">{APP_NAME}</p>
             <p className="brand__owner">{OWNER}</p>
           </div>
         </div>
-        <div className="topbar__actions">
+        <p className="hero__tag">{TAGLINE}</p>
+
+        <label className="search-pill search-pill--hero">
+          <IconSearch />
+          <input
+            ref={searchRef}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Rechercher une maison, un poste, une lettre…"
+          />
+        </label>
+
+        <div className="hero__actions">
           <button type="button" className="btn" onClick={() => fileRef.current?.click()}>
             <IconUpload /> Importer
           </button>
@@ -125,14 +145,7 @@ export default function App() {
           >
             <IconDownload /> Exporter
           </button>
-          <button
-            type="button"
-            className="btn btn--solid"
-            onClick={() => {
-              setIsNew(true);
-              setEditing(createEmptyJob());
-            }}
-          >
+          <button type="button" className="btn btn--solid" onClick={() => setCreating(createEmptyJob())}>
             <IconPlus /> Nouvelle
           </button>
           <input
@@ -150,43 +163,65 @@ export default function App() {
       </header>
 
       <main className="shell">
-        <label className="search-pill">
-          <IconSearch />
-          <input
-            ref={searchRef}
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={`Rechercher parmi ${jobs.length} offre${jobs.length > 1 ? "s" : ""} — poste, entreprise, tag…`}
-          />
-        </label>
-
-        <section className="overview" aria-label="Compteurs par statut">
-          {STATUS_LIST.map((status) => (
-            <button
-              key={status}
-              type="button"
-              className={`stat ${statusFilter === status ? "is-active" : ""}`}
-              onClick={() => setStatusFilter((prev) => (prev === status ? "all" : status))}
-            >
-              <span className="stat__count">{counts[status]}</span>
-              <span className="stat__label">{STATUS_META[status].label}</span>
-            </button>
-          ))}
+        <section className="overview" aria-label="Vue d'ensemble">
+          <button type="button" className="stat" onClick={() => setBlockedFilter("all")}>
+            <span className="stat__count">{jobs.length}</span>
+            <span className="stat__label">Offres</span>
+          </button>
+          <button
+            type="button"
+            className={`stat ${blockedFilter === "active" ? "is-active" : ""}`}
+            onClick={() => setBlockedFilter((prev) => (prev === "active" ? "all" : "active"))}
+          >
+            <span className="stat__count">{activeCount}</span>
+            <span className="stat__label">Actives</span>
+          </button>
+          <button
+            type="button"
+            className={`stat ${blockedFilter === "blocked" ? "is-active" : ""}`}
+            onClick={() => setBlockedFilter((prev) => (prev === "blocked" ? "all" : "blocked"))}
+          >
+            <span className="stat__count">{blockedCount}</span>
+            <span className="stat__label">Bloquées</span>
+          </button>
+          <div className="stat">
+            <span className="stat__count">{avgFit}</span>
+            <span className="stat__label">Fit moyen</span>
+          </div>
         </section>
 
-        <section className="filters" aria-label="Filtres">
+        <section className="toolbar">
+          <div className="view-switch" role="tablist" aria-label="Vue">
+            {(
+              [
+                ["grid", "Grille", IconGrid],
+                ["list", "Liste", IconList],
+                ["kanban", "Kanban", IconKanban],
+              ] as const
+            ).map(([id, label, Icon]) => (
+              <button
+                key={id}
+                type="button"
+                className={`view-switch__btn ${view === id ? "is-on" : ""}`}
+                onClick={() => setView(id)}
+              >
+                <Icon /> {label}
+              </button>
+            ))}
+          </div>
+
           <label className="filter">
             <span>Statut</span>
-            <select
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value as Status | "all")}
-            >
+            <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as Status | "all")}>
               <option value="all">Tous</option>
-              {STATUS_LIST.map((status) => (
-                <option key={status} value={status}>
-                  {STATUS_META[status].label}
-                </option>
-              ))}
+              <option value="à_traiter">À traiter</option>
+              <option value="adapté">Adapté</option>
+              <option value="candidaté">Candidaté</option>
+              <option value="relancé">Relancé</option>
+              <option value="entretien">Entretien</option>
+              <option value="offre">Offre</option>
+              <option value="refusé">Refusé</option>
+              <option value="archivé">Archivé</option>
             </select>
           </label>
           <label className="filter">
@@ -200,62 +235,69 @@ export default function App() {
               ))}
             </select>
           </label>
-          <label className="filter filter--fit">
-            <span>Score min. {minFit > 0 ? `${minFit}+` : "tous"}</span>
-            <input
-              type="range"
-              min={0}
-              max={10}
-              step={0.5}
-              value={minFit}
-              onChange={(event) => setMinFit(Number(event.target.value))}
-            />
-          </label>
-          {filterActive ? (
-            <button
-              type="button"
-              className="btn btn--tiny"
-              onClick={() => {
-                setQuery("");
-                setStatusFilter("all");
-                setContractFilter("all");
-                setMinFit(0);
-              }}
-            >
-              Réinitialiser
-            </button>
-          ) : null}
           <p className="filters__count">
-            {visible.length} résultat{visible.length > 1 ? "s" : ""}
+            {visible.length} dossier{visible.length > 1 ? "s" : ""}
           </p>
         </section>
 
-        <KanbanBoard
-          jobs={visible}
-          onOpen={(job) => {
-            setIsNew(false);
-            setEditing(job);
-          }}
-          onDelete={setPendingDelete}
-          onDropStatus={moveStatus}
-        />
+        {view === "kanban" ? (
+          <KanbanBoard
+            jobs={visible}
+            onOpen={(job) => open(job)}
+            onDelete={setPendingDelete}
+            onDropStatus={(id, status) => {
+              setJobs((prev) =>
+                prev.map((job) => (job.id === id && job.status !== status ? { ...job, status } : job)),
+              );
+            }}
+          />
+        ) : (
+          <section className={view === "list" ? "hub-list" : "hub-grid"}>
+            {visible.map((job) => (
+              <HubCard
+                key={job.id}
+                job={job}
+                layout={view}
+                active={openId === job.id}
+                onOpen={open}
+              />
+            ))}
+          </section>
+        )}
       </main>
 
-      {editing ? (
+      {openJob ? (
+        <JobDrawer
+          job={openJob}
+          tab={tab}
+          onTab={setTab}
+          onClose={() => setOpenId(null)}
+          onChange={patchJob}
+          onDelete={setPendingDelete}
+          onCopied={setToast}
+        />
+      ) : null}
+
+      {creating ? (
         <JobModal
-          job={editing}
-          isNew={isNew}
-          onClose={() => setEditing(null)}
-          onSave={upsert}
-          onDelete={isNew ? undefined : setPendingDelete}
+          job={creating}
+          isNew
+          onClose={() => setCreating(null)}
+          onSave={(job) => {
+            setJobs((prev) => [job, ...prev]);
+            setCreating(null);
+            setOpenId(job.id);
+            setTab("offre");
+            setToast("Dossier ajouté");
+          }}
         />
       ) : null}
 
       {pendingDelete ? (
         <ConfirmDialog
-          title="Supprimer cette offre ?"
-          message={`${pendingDelete.title} — ${pendingDelete.company}. Cette action est définitive.`}
-          confirmLabel="Supprimer"
+          title="Retirer cette offre ?"
+          message={`${pendingDelete.title} — ${pendingDelete.company}.`}
+          confirmLabel="Retirer"
           danger
           onCancel={() => setPendingDelete(null)}
           onConfirm={() => remove(pendingDelete)}
