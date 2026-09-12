@@ -1,3 +1,4 @@
+import { useState, type DragEvent } from "react";
 import { STATUS_META, STATUS_LIST } from "../constants";
 import type { Job, Status } from "../types";
 import { JobCard } from "./JobCard";
@@ -9,7 +10,13 @@ type KanbanBoardProps = {
   onDropStatus: (id: string, status: Status) => void;
 };
 
+function readDraggedId(event: DragEvent): string {
+  return event.dataTransfer.getData("text/job-id") || event.dataTransfer.getData("text/plain");
+}
+
 export function KanbanBoard({ jobs, onOpen, onDelete, onDropStatus }: KanbanBoardProps) {
+  const [overStatus, setOverStatus] = useState<Status | null>(null);
+
   return (
     <section className="kanban" aria-label="Kanban des candidatures">
       {STATUS_LIST.map((status) => {
@@ -17,14 +24,21 @@ export function KanbanBoard({ jobs, onOpen, onDelete, onDropStatus }: KanbanBoar
         return (
           <div
             key={status}
-            className="column"
+            className={`column ${overStatus === status ? "is-drop" : ""}`}
+            onDragEnter={() => setOverStatus(status)}
+            onDragLeave={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+                setOverStatus((prev) => (prev === status ? null : prev));
+              }
+            }}
             onDragOver={(event) => {
               event.preventDefault();
               event.dataTransfer.dropEffect = "move";
             }}
             onDrop={(event) => {
               event.preventDefault();
-              const id = event.dataTransfer.getData("text/job-id");
+              setOverStatus(null);
+              const id = readDraggedId(event);
               if (id) onDropStatus(id, status);
             }}
           >

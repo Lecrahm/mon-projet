@@ -77,6 +77,9 @@ export function exportJobsFile(jobs: Job[]): void {
   const link = document.createElement("a");
   link.href = url;
   link.download = "candidatures-marcel-esmel.json";
+  link.rel = "noopener";
+  document.body.appendChild(link);
   link.click();
-  URL.revokeObjectURL(url);
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

@@ -70,9 +70,9 @@ a {
 
 .bg__photo {
   background:
-    url("/bg.jpg") center 42% / cover no-repeat;
-  filter: brightness(0.32) saturate(0.45) contrast(1.05) blur(10px);
-  transform: scale(1.08);
+    url("/bg.jpg") center 58% / cover no-repeat;
+  filter: brightness(0.4) saturate(0.55) contrast(1.08) blur(3px);
+  transform: scale(1.04);
 }
 
 .bg__dim {
@@ -347,6 +347,11 @@ a {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.column.is-drop {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.38);
 }
 
 .column__head {

@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { STATUS_META } from "../constants";
 import type { Job } from "../types";
 import { formatDate, formatFit } from "../utils";
@@ -10,15 +11,27 @@ type JobCardProps = {
 };
 
 export function JobCard({ job, onOpen, onDelete }: JobCardProps) {
+  const dragging = useRef(false);
+
   return (
     <article
       className="job-card"
       draggable
       onDragStart={(event) => {
+        dragging.current = true;
+        event.dataTransfer.setData("text/plain", job.id);
         event.dataTransfer.setData("text/job-id", job.id);
         event.dataTransfer.effectAllowed = "move";
       }}
-      onClick={() => onOpen(job)}
+      onDragEnd={() => {
+        window.setTimeout(() => {
+          dragging.current = false;
+        }, 0);
+      }}
+      onClick={() => {
+        if (dragging.current) return;
+        onOpen(job);
+      }}
     >
       <div className="job-card__top">
         <span className="fit-pill" title="Score d'adéquation">
