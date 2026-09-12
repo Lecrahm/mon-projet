@@ -14,6 +14,17 @@ npm run dev
 
 Puis ouvrir l’URL affichée par Vite (généralement `http://localhost:5173`).
 
+## Vercel
+
+**Root Directory** du projet Vercel : `candidatures-tracker`  
+(Settings → Build and Deployment → Root Directory)
+
+Le preview Vercel sert alors le tracker à `/` (`https://<deployment>.vercel.app/`), pas l’app N-CARD à la racine du repo.
+
+Ce dossier contient son propre `vercel.json` (preset Vite, `npm run build`, sortie `dist`).
+
+Si le Root Directory n’est pas encore changé, le `vercel.json` à la racine du dépôt force déjà le build vers ce dossier.
+
 ## Build de production
 
 ```bash
