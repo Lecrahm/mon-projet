@@ -1,0 +1,174 @@
+import { DOCUMENTS } from "./documents";
+import type { Job } from "./types";
+
+const FOUND = "2026-09-12";
+const BLOCKED_REASON = "Permis de conduire requis — Marcel n'a pas le permis B";
+
+function row(
+  partial: Omit<
+    Job,
+    | "status"
+    | "notes"
+    | "date_found"
+    | "date_applied"
+    | "next_followup"
+    | "letter"
+    | "cv"
+    | "blocked"
+    | "blocked_reason"
+  > & { blocked?: boolean; notes?: string },
+): Job {
+  const docs = DOCUMENTS[partial.id] ?? { letter: "", cv: "" };
+  const blocked = Boolean(partial.blocked);
+  return {
+    ...partial,
+    status: "à_traiter",
+    notes:
+      partial.notes ??
+      (blocked ? "Ne pas candidater : permis B exigé. Dossier conservé pour mémoire." : ""),
+    date_found: FOUND,
+    date_applied: "",
+    next_followup: "",
+    letter: docs.letter,
+    cv: docs.cv,
+    blocked,
+    blocked_reason: blocked ? BLOCKED_REASON : "",
+  };
+}
+
+export const SEED_JOBS: Job[] = [
+  row({
+    id: "seed-01",
+    title: "Hospitality Officer H/F",
+    company: "PATCHWORK",
+    location: "Paris QCA",
+    contract: "CDI",
+    salary: "24 715 – 28 546 EUR",
+    url: "https://www.hellowork.com/fr-fr/emplois/79691794.html",
+    fit_score: 9.5,
+    tags: ["hospitality", "paris", "qca"],
+  }),
+  row({
+    id: "seed-02",
+    title: "Hôte / Hôtesse d'accueil",
+    company: "Cercle de l'Union Interalliée",
+    location: "Paris 8e",
+    contract: "CDI 35h",
+    salary: "2 200 EUR/mois · 13 mois",
+    url: "https://www.welcometothejungle.com/fr/companies/cercle-de-l-union-interalliee/jobs/hote-hotesse-d-accueil_paris_CDLI_aqp5MKJ",
+    fit_score: 9,
+    tags: ["accueil", "luxe", "paris-8"],
+    blocked: true,
+  }),
+  row({
+    id: "seed-03",
+    title: "Hôte / Hôtesse d'accueil Ensemble sportif",
+    company: "Cercle de l'Union Interalliée",
+    location: "Paris 8e",
+    contract: "CDI",
+    salary: "2 200 – 2 400 EUR/mois · 13 mois",
+    url: "https://www.welcometothejungle.com/fr/companies/cercle-de-l-union-interalliee/jobs/hote-hotesse-d-accueil-a-l-ensemble-sportif_paris",
+    fit_score: 8.5,
+    tags: ["accueil", "sport", "paris-8"],
+    blocked: true,
+  }),
+  row({
+    id: "seed-04",
+    title: "Hospitality Officer 35H",
+    company: "Groupe TDS",
+    location: "Paris 9e",
+    contract: "CDI",
+    salary: "1 925 – 2 075 EUR/mois",
+    url: "https://www.hellowork.com/fr-fr/emplois/81972644.html",
+    fit_score: 8.5,
+    tags: ["hospitality", "paris-9"],
+  }),
+  row({
+    id: "seed-05",
+    title: "Hôte Maison de Haute Joaillerie Place Vendôme",
+    company: "Florence Doré",
+    location: "Paris 1er",
+    contract: "CDI",
+    salary: "~2 250 EUR/mois",
+    url: "https://www.hellowork.com/fr-fr/emplois/82056165.html",
+    fit_score: 8.5,
+    tags: ["luxe", "joaillerie", "vendôme"],
+  }),
+  row({
+    id: "seed-06",
+    title: "Hôte d'accueil bilingue Maison de luxe 8e",
+    company: "GR Welcome Services",
+    location: "Paris 8e",
+    contract: "CDI",
+    salary: "NC",
+    url: "https://www.hellowork.com/fr-fr/emplois/82871207.html",
+    fit_score: 8,
+    tags: ["bilingue", "luxe", "paris-8"],
+  }),
+  row({
+    id: "seed-07",
+    title: "Hôte Multisites Paris Intra-Muros",
+    company: "Florence Doré",
+    location: "Paris",
+    contract: "CDD",
+    salary: "2 510 EUR/mois",
+    url: "https://www.florencedore.fr/offres-emploi/hote-sse-daccueil-multisites---cdd-temps-complet---paris-intra-muros-h-f",
+    fit_score: 8,
+    tags: ["accueil", "cdd", "paris"],
+  }),
+  row({
+    id: "seed-08",
+    title: "Hôte d'accueil Cabinet d'avocats 8e",
+    company: "Florence Doré",
+    location: "Paris 8e",
+    contract: "CDI",
+    salary: "~2 056 EUR",
+    url: "https://www.hellowork.com/fr-fr/emplois/82784488.html",
+    fit_score: 8,
+    tags: ["avocats", "accueil", "paris-8"],
+  }),
+  row({
+    id: "seed-09",
+    title: "Hôte Cabinet Avocats Premium",
+    company: "Florence Doré",
+    location: "Paris 16e",
+    contract: "CDI",
+    salary: "1 868 EUR + primes",
+    url: "https://www.florencedore.fr/offres-emploi/hote-daccueil---cabinet-davocats-premium---cdi-35h-h-f",
+    fit_score: 7.5,
+    tags: ["avocats", "premium", "paris-16"],
+  }),
+  row({
+    id: "seed-10",
+    title: "ASAP Hôte Société Financière",
+    company: "Florence Doré",
+    location: "Paris 16e",
+    contract: "CDI",
+    salary: "1 868 EUR + primes",
+    url: "https://www.florencedore.fr/offres-emploi/asap-hote-sse-daccueil---societe-financiere---cdi-temps-complet-12h-20h---75016-h-f",
+    fit_score: 7.5,
+    tags: ["finance", "asap", "paris-16"],
+  }),
+  row({
+    id: "seed-11",
+    title: "Hôte d'Accueil bilingue",
+    company: "Derichebourg Hospitality",
+    location: "Paris 8e",
+    contract: "CDI",
+    salary: "22 405 – 23 662 EUR/an",
+    url: "https://www.hellowork.com/fr-fr/emplois/80206516.html",
+    fit_score: 7.5,
+    tags: ["bilingue", "hospitality", "paris-8"],
+  }),
+  row({
+    id: "seed-12",
+    title: "Hôte(sse) Information Aéroportuaire",
+    company: "Otessa (CRIT)",
+    location: "Roissy CDG",
+    contract: "CDI/CDD",
+    salary: "NC",
+    url: "https://www.air-jobs.fr/offres-emploi/otessa-cdi-hotesse-daccueil-information-aeroportuaire-cdi-cdd-roissy-cdg-h-f",
+    fit_score: 7,
+    tags: ["aéroport", "information", "roissy"],
+  }),
+];
