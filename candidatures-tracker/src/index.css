@@ -69,16 +69,15 @@ a {
 }
 
 .bg__photo {
-  background:
-    url("/bg.jpg") center 58% / cover no-repeat;
-  filter: brightness(0.4) saturate(0.55) contrast(1.08) blur(3px);
-  transform: scale(1.04);
+  background: url("/bg.jpg") center 78% / cover no-repeat;
+  filter: brightness(0.52) saturate(0.75) contrast(1.08);
+  transform: scale(1.03);
 }
 
 .bg__dim {
   background:
-    radial-gradient(ellipse 80% 55% at 50% 0%, rgba(255, 255, 255, 0.06), transparent 55%),
-    linear-gradient(180deg, rgba(6, 6, 8, 0.42) 0%, rgba(5, 5, 7, 0.72) 100%);
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255, 255, 255, 0.05), transparent 55%),
+    linear-gradient(180deg, rgba(4, 4, 6, 0.28) 0%, rgba(4, 4, 6, 0.58) 100%);
 }
 
 .bg__grain {

@@ -57,3 +57,5 @@ Chaque offre :
 ```
 
 Statuts possibles : `à_traiter` | `adapté` | `candidaté` | `relancé` | `entretien` | `offre` | `refusé` | `archivé`.
+
+Arrière-plan photographique : cliché Unsplash d’un bureau sombre (clavier / écran), assombri et grainé pour l’effet verre dépoli.
