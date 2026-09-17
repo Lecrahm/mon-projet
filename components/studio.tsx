@@ -5,12 +5,12 @@ import Link from "next/link";
 import { useAppStore } from "@/components/app-store";
 import { PaywallDialog } from "@/components/paywall";
 import { Button, Field, Segmented, Select, TextArea } from "@/components/ui";
+import { requestFace } from "@/lib/client-generate";
 import { CHANNEL_LABELS, REGISTER_HINTS, REGISTER_LABELS } from "@/lib/labels";
 import { FREE_FACE_MONTHLY } from "@/lib/storage";
 import type {
   Channel,
   Face,
-  FaceApiResponse,
   Ombre,
   Outcome,
   Register,
@@ -59,22 +59,17 @@ export function Studio() {
     setError(null);
     setWarning(null);
     try {
-      const res = await fetch("/api/face", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ombreText: ombre,
-          register,
-          channel: selectedChannel,
-          recipient: {
-            name: recipient.name,
-            role: recipient.role,
-            powerDistance: recipient.powerDistance,
-            styleNotes: recipient.styleNotes,
-          },
-        }),
+      const data = await requestFace({
+        ombreText: ombre,
+        register,
+        channel: selectedChannel,
+        recipient: {
+          name: recipient.name,
+          role: recipient.role,
+          powerDistance: recipient.powerDistance,
+          styleNotes: recipient.styleNotes,
+        },
       });
-      const data = (await res.json()) as FaceApiResponse & { message?: string };
       if (!data.ok) {
         setError(data.message);
         setResult(null);
@@ -94,7 +89,7 @@ export function Studio() {
       });
       setResult(recorded);
     } catch {
-      setError("Réseau instable. Réessayez.");
+      setError("Impossible de générer la Face. Réessayez.");
     } finally {
       setBusy(false);
     }

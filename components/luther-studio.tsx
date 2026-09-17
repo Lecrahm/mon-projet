@@ -6,9 +6,9 @@ import { useAppStore } from "@/components/app-store";
 import { PaywallDialog } from "@/components/paywall";
 import { Button, TextArea } from "@/components/ui";
 import { hashString } from "@/lib/ids";
+import { requestLuther } from "@/lib/client-generate";
 import { renderLutherCard } from "@/lib/luther-card";
 import { FREE_LUTHER_DAILY } from "@/lib/storage";
-import type { LutherApiResponse } from "@/lib/types";
 
 export function LutherStudio() {
   const store = useAppStore();
@@ -41,12 +41,7 @@ export function LutherStudio() {
     setError(null);
     setWarning(null);
     try {
-      const res = await fetch("/api/luther", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
-      const data = (await res.json()) as LutherApiResponse & { message?: string };
+      const data = await requestLuther(text);
       if (!data.ok) {
         setError(data.message);
         return;
@@ -60,14 +55,12 @@ export function LutherStudio() {
         title: data.title,
       });
       setShareId(share.id);
-      if (typeof window !== "undefined") {
-        window.sessionStorage.setItem(
-          `luther-share:${share.id}`,
-          JSON.stringify({ title: data.title, rant: data.rant }),
-        );
-      }
+      window.sessionStorage.setItem(
+        `luther-share:${share.id}`,
+        JSON.stringify({ title: data.title, rant: data.rant }),
+      );
     } catch {
-      setError("Réseau instable. Réessayez.");
+      setError("Impossible de générer le rant. Réessayez.");
     } finally {
       setBusy(false);
     }

@@ -65,9 +65,6 @@ export function greeting(args: {
   if (args.channel === "linkedin") {
     return args.vous || !first ? "Bonjour," : `Bonjour ${first},`;
   }
-  if (args.register === "direct" && !args.vous && first) {
-    return `Salut ${first},`;
-  }
   if (first) return `Bonjour ${first},`;
   return "Bonjour,";
 }

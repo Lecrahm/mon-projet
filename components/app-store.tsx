@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo, useSyncExternalStore } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { uid } from "@/lib/ids";
 import {
   FREE_RECIPIENTS,
@@ -53,51 +53,32 @@ type Store = {
 
 const Ctx = createContext<Store | null>(null);
 
-const EMPTY = emptySnapshot();
-let memory = EMPTY;
-let didHydrate = false;
-const listeners = new Set<() => void>();
-
-function emit() {
-  for (const listener of listeners) listener();
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
-}
-
-function getSnapshot(): AppSnapshot {
-  if (!didHydrate) {
-    memory = loadSnapshot();
-    didHydrate = true;
-  }
-  return memory;
-}
-
-function mutate(fn: (current: AppSnapshot) => AppSnapshot) {
-  memory = fn(memory);
-  saveSnapshot(memory);
-  emit();
-}
-
 export function AppStoreProvider({ children }: { children: React.ReactNode }) {
-  const snapshot = useSyncExternalStore(subscribe, getSnapshot, () => EMPTY);
-  const ready = useSyncExternalStore(subscribe, () => true, () => false);
+  const [snapshot, setSnapshot] = useState<AppSnapshot>(emptySnapshot);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setSnapshot(loadSnapshot());
+    setReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (ready) saveSnapshot(snapshot);
+  }, [ready, snapshot]);
 
   const value = useMemo<Store>(() => {
+    const mutate = (fn: (current: AppSnapshot) => AppSnapshot) => {
+      setSnapshot((current) => fn(current));
+    };
     return {
       ready,
       snapshot,
       weekFaces: facesThisWeek(snapshot.faces),
       addRecipient: (draft) => {
-        const latest = getSnapshot();
-        if (latest.recipients.length >= MAX_RECIPIENTS) {
+        if (snapshot.recipients.length >= MAX_RECIPIENTS) {
           return { ok: false, reason: "max" };
         }
-        if (!latest.demoUnlocked && latest.recipients.length >= FREE_RECIPIENTS) {
+        if (!snapshot.demoUnlocked && snapshot.recipients.length >= FREE_RECIPIENTS) {
           return { ok: false, reason: "paywall" };
         }
         const recipient: Recipient = {
@@ -207,11 +188,9 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       wipe: () => {
         const wiped = emptySnapshot();
         wiped.onboardingDone = true;
-        memory = wiped;
-        saveSnapshot(wiped);
-        emit();
+        setSnapshot(wiped);
       },
-      exportJson: () => JSON.stringify(getSnapshot(), null, 2),
+      exportJson: () => JSON.stringify(snapshot, null, 2),
     };
   }, [ready, snapshot]);
 
