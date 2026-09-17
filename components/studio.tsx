@@ -105,6 +105,19 @@ export function Studio() {
   const faceA = result?.faces.find((face) => face.variant === "a");
   const faceB = result?.faces.find((face) => face.variant === "b");
 
+  function patchResult(faceId: string, patch: Partial<Face>) {
+    setResult((current) =>
+      current
+        ? {
+            ...current,
+            faces: current.faces.map((face) =>
+              face.id === faceId ? { ...face, ...patch } : face,
+            ),
+          }
+        : current,
+    );
+  }
+
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       {burst ? <span className="pointer-events-none fixed inset-0 z-40 confetti-soft" /> : null}
@@ -235,8 +248,14 @@ export function Studio() {
                 face={faceA}
                 copied={copied === "a"}
                 onCopy={() => void copyFace(faceA, "a")}
-                onSent={() => store.markSent(faceA.id)}
-                onOutcome={(outcome) => store.setOutcome(faceA.id, outcome)}
+                onSent={() => {
+                  store.markSent(faceA.id);
+                  patchResult(faceA.id, { sentMarkedAt: new Date().toISOString() });
+                }}
+                onOutcome={(outcome) => {
+                  store.setOutcome(faceA.id, outcome);
+                  patchResult(faceA.id, { outcome });
+                }}
               />
             ) : null}
             {faceB ? (
@@ -245,8 +264,14 @@ export function Studio() {
                 face={faceB}
                 copied={copied === "b"}
                 onCopy={() => void copyFace(faceB, "b")}
-                onSent={() => store.markSent(faceB.id)}
-                onOutcome={(outcome) => store.setOutcome(faceB.id, outcome)}
+                onSent={() => {
+                  store.markSent(faceB.id);
+                  patchResult(faceB.id, { sentMarkedAt: new Date().toISOString() });
+                }}
+                onOutcome={(outcome) => {
+                  store.setOutcome(faceB.id, outcome);
+                  patchResult(faceB.id, { outcome });
+                }}
               />
             ) : null}
             {faceA?.riskNote ? (
