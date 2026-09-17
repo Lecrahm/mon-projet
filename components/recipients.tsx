@@ -73,10 +73,6 @@ export function RecipientsView() {
     router.replace("/app/destinataires");
   }
 
-  if (!store.ready) {
-    return <p className="text-paper/40">Chargement…</p>;
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">

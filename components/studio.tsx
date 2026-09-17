@@ -38,10 +38,6 @@ export function Studio() {
   const [copied, setCopied] = useState<"a" | "b" | null>(null);
   const [burst, setBurst] = useState(false);
 
-  if (!store.ready) {
-    return <p className="text-paper/40">Chargement du Studio…</p>;
-  }
-
   async function generate() {
     if (!recipient) {
       setError("Créez d’abord un destinataire.");

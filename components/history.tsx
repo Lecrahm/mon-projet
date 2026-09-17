@@ -6,7 +6,7 @@ import { CHANNEL_LABELS, REGISTER_LABELS } from "@/lib/labels";
 import { isHistoryLocked } from "@/lib/storage";
 
 export function HistoryView() {
-  const { snapshot, ready } = useAppStore();
+  const { snapshot } = useAppStore();
   const [recipientId, setRecipientId] = useState<string | null>(null);
   const recipient =
     snapshot.recipients.find((item) => item.id === recipientId) ?? snapshot.recipients[0];
@@ -21,10 +21,6 @@ export function HistoryView() {
       return { ombre, pair };
     });
   }, [recipient, snapshot.faces, snapshot.ombres]);
-
-  if (!ready) {
-    return <p className="text-paper/40">Chargement…</p>;
-  }
 
   if (snapshot.recipients.length === 0) {
     return (
